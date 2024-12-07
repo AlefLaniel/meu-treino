@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { WorkoutPlan } from "./types/workout";
 import { WorkoutForm } from "./components/WorkoutForm";
 import { WorkoutCard } from "./components/WorkoutCard";
 import { Plus, Dumbbell } from "lucide-react";
 import { useWorkouts } from "./hooks/useWorkouts";
 import { DeleteButton } from "./components/DeleteButton";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import Swal from "sweetalert2";
 
 function App() {
   const { workouts, addWorkout, updateWorkout, deleteWorkout } = useWorkouts();
@@ -16,12 +19,30 @@ function App() {
     null
   );
 
+  useEffect(() => {
+    if (selectedWorkout) {
+      console.log("selectedWorkout atualizado:", selectedWorkout);
+    }
+  }, [selectedWorkout]);
+
   const handleSaveWorkout = (workout: WorkoutPlan) => {
     if (editingWorkout) {
       updateWorkout(workout);
       setEditingWorkout(null);
+      Swal.fire({
+        icon: "success",
+        title: "Treino atualizado!",
+        showConfirmButton: false,
+        timer: 1500
+      });
     } else {
       addWorkout(workout);
+      Swal.fire({
+        icon: "success",
+        title: "Treino Criado!",
+        showConfirmButton: false,
+        timer: 1500
+      });
     }
     setShowForm(false);
   };
@@ -72,7 +93,29 @@ function App() {
       updateWorkout(updatedWorkout);
       setSelectedWorkout(updatedWorkout);
     }
-    setSelectedWorkout(null)
+    setSelectedWorkout(null);
+  };
+
+  const generatePdf = async () => {
+    try {
+      const element = document.getElementById("workoutDetails");
+      if (element) {
+        console.log("Elemento encontrado, gerando PDF...");
+        const canvas = await html2canvas(element);
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF();
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        console.log("Salvando PDF...");
+        pdf.save(`${selectedWorkout?.name || "workout"}.pdf`);
+      } else {
+        console.error("Elemento não encontrado");
+      }
+    } catch (error) {
+      console.error("Erro ao gerar o PDF:", error);
+    }
   };
 
   return (
@@ -130,7 +173,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div id="workoutDetails" className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-2xl font-bold mb-4">
                 {selectedWorkout.name}
               </h2>
@@ -172,17 +215,25 @@ function App() {
                     </div>
                   </div>
                 ))}
-
-
               </div>
             </div>
+           <div className="text-center">
+           <button
+              onClick={handleResetExercises}
+              className="mt-6 bg-red-600 text-white py-2 px-4 text-center mx-auto rounded-md hover:bg-red-700"
+            >
+              {" "}
+              Finalizar e Resetar{" "}
+            </button>
+
             <button
-                  onClick={handleResetExercises}
-                  className="mt-6 bg-red-600 text-white py-2 px-4 text-center mx-auto rounded-md hover:bg-red-700"
-                >
-                  {" "}
-                  Finalizar e Resetar{" "}
-                </button>
+              onClick={generatePdf}
+              className="mt-6 ml-2 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+            >
+              {" "}
+              Gerar PDF{" "}
+            </button>
+           </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
