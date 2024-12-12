@@ -10,11 +10,10 @@ import WorkoutSheetForm from "./components/forms/WorkoutSheetForm";
 import WorkoutPlanForm from "./components/forms/WorkoutPlanForm";
 import ExerciseForm from "./components/forms/ExerciseForm";
 import { ChevronLeft } from "lucide-react";
-import { workoutSheets } from "./data/workoutSheets";
 import { generatePdfFromHtml } from "./utils/pdf";
 
 export default function App() {
-  const [sheets, setSheets] = useState<WorkoutSheet[]>(workoutSheets);
+  const [sheets, setSheets] = useState<WorkoutSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<WorkoutSheet | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
 
