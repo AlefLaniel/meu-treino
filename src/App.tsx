@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { WorkoutSheet, WorkoutPlan, Exercise } from './types/workout';
-import { getWorkoutSheets, saveWorkoutSheets } from './utils/storage';
-import WorkoutSheetList from './components/WorkoutSheetList';
-import WorkoutPlanList from './components/WorkoutPlanList';
-import ExerciseList from './components/ExerciseList';
-import Modal from './components/Modal';
-import WorkoutSheetForm from './components/forms/WorkoutSheetForm';
-import WorkoutPlanForm from './components/forms/WorkoutPlanForm';
-import ExerciseForm from './components/forms/ExerciseForm';
-import { ChevronLeft } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { WorkoutSheet, WorkoutPlan, Exercise } from "./types/workout";
+import { getWorkoutSheets, saveWorkoutSheets } from "./utils/storage";
+import WorkoutSheetList from "./components/WorkoutSheetList";
+import WorkoutPlanList from "./components/WorkoutPlanList";
+import ExerciseList from "./components/ExerciseList";
+import Modal from "./components/Modal";
+import WorkoutSheetForm from "./components/forms/WorkoutSheetForm";
+import WorkoutPlanForm from "./components/forms/WorkoutPlanForm";
+import ExerciseForm from "./components/forms/ExerciseForm";
+import { ChevronLeft } from "lucide-react";
+import { workoutSheets } from "./data/workoutSheets";
+import { generatePdfFromHtml } from "./utils/pdf";
 
 export default function App() {
-  const [sheets, setSheets] = useState<WorkoutSheet[]>([]);
+  const [sheets, setSheets] = useState<WorkoutSheet[]>(workoutSheets);
   const [selectedSheet, setSelectedSheet] = useState<WorkoutSheet | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
-  
+
   const [isSheetModalOpen, setIsSheetModalOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
-  
+
   const [editingSheet, setEditingSheet] = useState<WorkoutSheet | null>(null);
   const [editingPlan, setEditingPlan] = useState<WorkoutPlan | null>(null);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -33,7 +35,9 @@ export default function App() {
   }, [sheets]);
 
   // Sheet operations
-  const handleAddSheet = (data: Omit<WorkoutSheet, 'id' | 'plans' | 'createdAt'>) => {
+  const handleAddSheet = (
+    data: Omit<WorkoutSheet, "id" | "plans" | "createdAt">
+  ) => {
     const newSheet: WorkoutSheet = {
       ...data,
       id: uuidv4(),
@@ -44,27 +48,29 @@ export default function App() {
     setIsSheetModalOpen(false);
   };
 
-  const handleEditSheet = (data: Omit<WorkoutSheet, 'id' | 'plans' | 'createdAt'>) => {
+  const handleEditSheet = (
+    data: Omit<WorkoutSheet, "id" | "plans" | "createdAt">
+  ) => {
     if (!editingSheet) return;
-    const updatedSheets = sheets.map(sheet =>
-      sheet.id === editingSheet.id
-        ? { ...sheet, ...data }
-        : sheet
+    const updatedSheets = sheets.map((sheet) =>
+      sheet.id === editingSheet.id ? { ...sheet, ...data } : sheet
     );
     setSheets(updatedSheets);
-    setSelectedSheet(updatedSheets.find(s => s.id === editingSheet.id) ?? null);
+    setSelectedSheet(
+      updatedSheets.find((s) => s.id === editingSheet.id) ?? null
+    );
     setIsSheetModalOpen(false);
     setEditingSheet(null);
   };
 
   const handleDeleteSheet = (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta ficha?')) return;
-    setSheets(sheets.filter(sheet => sheet.id !== id));
+    if (!confirm("Tem certeza que deseja excluir esta ficha?")) return;
+    setSheets(sheets.filter((sheet) => sheet.id !== id));
     if (selectedSheet?.id === id) setSelectedSheet(null);
   };
 
   // Plan operations
-  const handleAddPlan = (data: Pick<WorkoutPlan, 'name'>) => {
+  const handleAddPlan = (data: Pick<WorkoutPlan, "name">) => {
     if (!selectedSheet) return;
     const newPlan: WorkoutPlan = {
       ...data,
@@ -75,71 +81,81 @@ export default function App() {
       ...selectedSheet,
       plans: [...selectedSheet.plans, newPlan],
     };
-    setSheets(sheets.map(sheet =>
-      sheet.id === selectedSheet.id ? updatedSheet : sheet
-    ));
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
     setSelectedSheet(updatedSheet);
     setIsPlanModalOpen(false);
   };
 
-  const handleEditPlan = (data: Pick<WorkoutPlan, 'name'>) => {
+  const handleEditPlan = (data: Pick<WorkoutPlan, "name">) => {
     if (!selectedSheet || !editingPlan) return;
-    const updatedPlans = selectedSheet.plans.map(plan =>
-      plan.id === editingPlan.id
-        ? { ...plan, ...data }
-        : plan
+    const updatedPlans = selectedSheet.plans.map((plan) =>
+      plan.id === editingPlan.id ? { ...plan, ...data } : plan
     );
     const updatedSheet = { ...selectedSheet, plans: updatedPlans };
-    setSheets(sheets.map(sheet =>
-      sheet.id === selectedSheet.id ? updatedSheet : sheet
-    ));
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
     setSelectedSheet(updatedSheet);
-    setSelectedPlan(updatedPlans.find(p => p.id === editingPlan.id) ?? null);
+    setSelectedPlan(updatedPlans.find((p) => p.id === editingPlan.id) ?? null);
     setIsPlanModalOpen(false);
     setEditingPlan(null);
   };
 
   const handleDeletePlan = (id: string) => {
-    if (!selectedSheet || !confirm('Tem certeza que deseja excluir este plano?')) return;
+    if (
+      !selectedSheet ||
+      !confirm("Tem certeza que deseja excluir este plano?")
+    )
+      return;
     const updatedSheet = {
       ...selectedSheet,
-      plans: selectedSheet.plans.filter(plan => plan.id !== id),
+      plans: selectedSheet.plans.filter((plan) => plan.id !== id),
     };
-    setSheets(sheets.map(sheet =>
-      sheet.id === selectedSheet.id ? updatedSheet : sheet
-    ));
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
     setSelectedSheet(updatedSheet);
     if (selectedPlan?.id === id) setSelectedPlan(null);
   };
 
   // Exercise operations
-  const handleAddExercise = (data: Omit<Exercise, 'id'>) => {
+  const handleAddExercise = (data: Omit<Exercise, "id">) => {
     if (!selectedSheet || !selectedPlan) return;
     const newExercise: Exercise = {
       ...data,
       id: uuidv4(),
     };
-    const updatedPlans = selectedSheet.plans.map(plan =>
+    const updatedPlans = selectedSheet.plans.map((plan) =>
       plan.id === selectedPlan.id
         ? { ...plan, exercises: [...plan.exercises, newExercise] }
         : plan
     );
     const updatedSheet = { ...selectedSheet, plans: updatedPlans };
-    setSheets(sheets.map(sheet =>
-      sheet.id === selectedSheet.id ? updatedSheet : sheet
-    ));
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
     setSelectedSheet(updatedSheet);
-    setSelectedPlan(updatedPlans.find(p => p.id === selectedPlan.id) ?? null);
+    setSelectedPlan(updatedPlans.find((p) => p.id === selectedPlan.id) ?? null);
     setIsExerciseModalOpen(false);
   };
 
-  const handleEditExercise = (data: Omit<Exercise, 'id'>) => {
+  const handleEditExercise = (data: Omit<Exercise, "id">) => {
     if (!selectedSheet || !selectedPlan || !editingExercise) return;
-    const updatedPlans = selectedSheet.plans.map(plan =>
+    const updatedPlans = selectedSheet.plans.map((plan) =>
       plan.id === selectedPlan.id
         ? {
             ...plan,
-            exercises: plan.exercises.map(exercise =>
+            exercises: plan.exercises.map((exercise) =>
               exercise.id === editingExercise.id
                 ? { ...exercise, ...data }
                 : exercise
@@ -148,29 +164,94 @@ export default function App() {
         : plan
     );
     const updatedSheet = { ...selectedSheet, plans: updatedPlans };
-    setSheets(sheets.map(sheet =>
-      sheet.id === selectedSheet.id ? updatedSheet : sheet
-    ));
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
     setSelectedSheet(updatedSheet);
-    setSelectedPlan(updatedPlans.find(p => p.id === selectedPlan.id) ?? null);
+    setSelectedPlan(updatedPlans.find((p) => p.id === selectedPlan.id) ?? null);
     setIsExerciseModalOpen(false);
     setEditingExercise(null);
   };
 
   const handleDeleteExercise = (id: string) => {
-    if (!selectedSheet || !selectedPlan || !confirm('Tem certeza que deseja excluir este exercício?')) return;
-    const updatedPlans = selectedSheet.plans.map(plan =>
+    if (
+      !selectedSheet ||
+      !selectedPlan ||
+      !confirm("Tem certeza que deseja excluir este exercício?")
+    )
+      return;
+    const updatedPlans = selectedSheet.plans.map((plan) =>
       plan.id === selectedPlan.id
-        ? { ...plan, exercises: plan.exercises.filter(exercise => exercise.id !== id) }
+        ? {
+            ...plan,
+            exercises: plan.exercises.filter((exercise) => exercise.id !== id),
+          }
         : plan
     );
     const updatedSheet = { ...selectedSheet, plans: updatedPlans };
-    setSheets(sheets.map(sheet =>
-      sheet.id === selectedSheet.id ? updatedSheet : sheet
-    ));
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
     setSelectedSheet(updatedSheet);
-    setSelectedPlan(updatedPlans.find(p => p.id === selectedPlan.id) ?? null);
+    setSelectedPlan(updatedPlans.find((p) => p.id === selectedPlan.id) ?? null);
   };
+
+  const handleToggleExerciseCompletion = (id: string) => {
+    if (!selectedSheet || !selectedPlan) return;
+
+    const updatedPlans = selectedSheet.plans.map((plan) =>
+      plan.id === selectedPlan.id
+        ? {
+            ...plan,
+            exercises: plan.exercises.map((exercise) =>
+              exercise.id === id
+                ? { ...exercise, completed: !exercise.completed }
+                : exercise
+            ),
+          }
+        : plan
+    );
+
+    const updatedSheet = { ...selectedSheet, plans: updatedPlans };
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
+    setSelectedSheet(updatedSheet);
+    setSelectedPlan(updatedPlans.find((p) => p.id === selectedPlan.id) ?? null);
+  };
+
+  const resetCompleted = () => {
+    if (!selectedSheet || !selectedPlan) return;
+
+    const updatedPlans = selectedSheet.plans.map((plan) =>
+      plan.id === selectedPlan.id
+        ? {
+            ...plan,
+            exercises: plan.exercises.map((exercise) => ({
+              ...exercise,
+              completed: false, // Reseta o estado
+            })),
+          }
+        : plan
+    );
+
+    const updatedSheet = { ...selectedSheet, plans: updatedPlans };
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
+    setSelectedSheet(updatedSheet);
+    setSelectedPlan(updatedPlans.find((p) => p.id === selectedPlan.id) ?? null);
+    setSelectedSheet(null);
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -191,12 +272,14 @@ export default function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSelectedSheet(null)}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                className="action-button flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ChevronLeft size={20} />
                 Voltar
               </button>
-              <h2 className="text-2xl font-bold text-gray-900">{selectedSheet.name}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedSheet.name}
+              </h2>
             </div>
             <WorkoutPlanList
               plans={selectedSheet.plans}
@@ -210,7 +293,7 @@ export default function App() {
             />
           </div>
         ) : (
-          <div className="space-y-6">
+          <div id="exercise-list" className="space-y-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSelectedPlan(null)}
@@ -219,7 +302,9 @@ export default function App() {
                 <ChevronLeft size={20} />
                 Voltar
               </button>
-              <h2 className="text-2xl font-bold text-gray-900">{selectedPlan.name}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedPlan.name}
+              </h2>
             </div>
             <ExerciseList
               exercises={selectedPlan.exercises}
@@ -229,7 +314,24 @@ export default function App() {
                 setIsExerciseModalOpen(true);
               }}
               onDelete={handleDeleteExercise}
+              onToggleCompletion={handleToggleExerciseCompletion}
             />
+            <div className="flex justify-between">
+              {/* Botão de reset */}
+              <button
+                onClick={resetCompleted}
+                className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Finalizar Exercícios
+              </button>
+              {/* Botão de Gerar PDF */}
+              <button
+                onClick={() => generatePdfFromHtml()}
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Gerar PDF
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -240,7 +342,7 @@ export default function App() {
           setIsSheetModalOpen(false);
           setEditingSheet(null);
         }}
-        title={editingSheet ? 'Editar Ficha' : 'Nova Ficha'}
+        title={editingSheet ? "Editar Ficha" : "Nova Ficha"}
       >
         <WorkoutSheetForm
           sheet={editingSheet}
@@ -258,7 +360,7 @@ export default function App() {
           setIsPlanModalOpen(false);
           setEditingPlan(null);
         }}
-        title={editingPlan ? 'Editar Plano' : 'Novo Plano'}
+        title={editingPlan ? "Editar Plano" : "Novo Plano"}
       >
         <WorkoutPlanForm
           plan={editingPlan}
@@ -276,7 +378,7 @@ export default function App() {
           setIsExerciseModalOpen(false);
           setEditingExercise(null);
         }}
-        title={editingExercise ? 'Editar Exercício' : 'Novo Exercício'}
+        title={editingExercise ? "Editar Exercício" : "Novo Exercício"}
       >
         <ExerciseForm
           exercise={editingExercise}

@@ -14,7 +14,7 @@ export default function WorkoutSheetList({ sheets, onSelect, onAdd, onEdit, onDe
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Fichas de Treino</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Meus Treinos</h2>
         <button
           onClick={onAdd}
           className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"

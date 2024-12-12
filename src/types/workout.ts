@@ -5,6 +5,7 @@ export interface Exercise {
   reps: number;
   weight: number;
   notes?: string;
+  completed?: boolean
 }
 
 export interface WorkoutPlan {

@@ -1,15 +1,23 @@
-import React from 'react';
-import { Plus, Trash2, Edit } from 'lucide-react';
-import { Exercise } from '../types/workout';
+import React from "react";
+import { Plus, Trash2, Edit } from "lucide-react";
+import { Exercise } from "../types/workout";
+
 
 interface Props {
   exercises: Exercise[];
   onAdd: () => void;
   onEdit: (exercise: Exercise) => void;
   onDelete: (id: string) => void;
+  onToggleCompletion: (id: string) => void;
 }
 
-export default function ExerciseList({ exercises, onAdd, onEdit, onDelete }: Props) {
+export default function ExerciseList({
+  exercises,
+  onAdd,
+  onEdit,
+  onDelete,
+  onToggleCompletion
+}: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -31,6 +39,12 @@ export default function ExerciseList({ exercises, onAdd, onEdit, onDelete }: Pro
           >
             <div className="flex justify-between items-start">
               <div>
+                <input
+                  type="checkbox"
+                  checked={exercise.completed || false}
+                  onChange={() => onToggleCompletion(exercise.id)}
+                  className="w-5 h-5"
+                />
                 <h4 className="text-lg font-semibold text-gray-800 mb-2">
                   {exercise.name}
                 </h4>
@@ -39,10 +53,12 @@ export default function ExerciseList({ exercises, onAdd, onEdit, onDelete }: Pro
                     <span className="font-medium">Séries:</span> {exercise.sets}
                   </div>
                   <div>
-                    <span className="font-medium">Repetições:</span> {exercise.reps}
+                    <span className="font-medium">Repetições:</span>{" "}
+                    {exercise.reps}
                   </div>
                   <div>
-                    <span className="font-medium">Peso:</span> {exercise.weight}kg
+                    <span className="font-medium">Peso:</span> {exercise.weight}
+                    kg
                   </div>
                 </div>
                 {exercise.notes && (
