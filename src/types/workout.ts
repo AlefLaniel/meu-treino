@@ -12,6 +12,7 @@ export interface WorkoutPlan {
   id: string;
   name: string;
   exercises: Exercise[];
+  done?: boolean
 }
 
 export interface WorkoutSheet {

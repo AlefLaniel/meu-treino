@@ -11,15 +11,18 @@ export const generatePdfFromHtml = async () => {
 
     try {
         // Captura o conteúdo como canvas
-        const canvas = await html2canvas(element, { scale: 2 }); // Aumenta a resolução
-        const imgData = canvas.toDataURL("image/png");
-
-        // Cria o PDF
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png", 1.0);
+        
         const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        const pageHeight = pdf.internal.pageSize.height;
+        const canvasHeight = canvas.height * 210 / canvas.width; // Altura proporcional à largura da página A4
+        let position = 0;
+        while (position < canvasHeight) {
+            pdf.addImage(imgData, 'JPEG', 0, position, 210, canvasHeight - position < pageHeight ? canvasHeight - position : pageHeight);
+            position += pageHeight;
+            if (position < canvasHeight) pdf.addPage();
+          }
         pdf.save("treino.pdf");
     } catch (error) {
         console.error("Erro ao gerar o PDF:", error);

@@ -232,7 +232,7 @@ export default function App() {
     const updatedPlans = selectedSheet.plans.map((plan) =>
       plan.id === selectedPlan.id
         ? {
-            ...plan,
+            ...plan, done: true,
             exercises: plan.exercises.map((exercise) => ({
               ...exercise,
               completed: false, // Reseta o estado
@@ -249,8 +249,33 @@ export default function App() {
     );
     setSelectedSheet(updatedSheet);
     setSelectedPlan(updatedPlans.find((p) => p.id === selectedPlan.id) ?? null);
-    setSelectedSheet(null);
+    setSelectedPlan(null)
   };
+
+  const resetDone = () => {
+    if (!selectedSheet) return;
+  
+    const updatedPlans = selectedSheet.plans.map((plan) => ({
+      ...plan,
+      done: false, // Reseta o estado de "done" do plano
+      exercises: plan.exercises.map((exercise) => ({
+        ...exercise,
+        completed: false, // Reseta o estado de "completed" de todos os exercícios
+      })),
+    }));
+  
+    const updatedSheet = { ...selectedSheet, plans: updatedPlans };
+  
+    setSheets(
+      sheets.map((sheet) =>
+        sheet.id === selectedSheet.id ? updatedSheet : sheet
+      )
+    );
+  
+    setSelectedSheet(updatedSheet);
+    setSelectedPlan(null); // Remove o plano selecionado para refletir a atualização
+  };
+  
 
 
   return (
@@ -290,6 +315,7 @@ export default function App() {
                 setIsPlanModalOpen(true);
               }}
               onDelete={handleDeletePlan}
+              resetDone={resetDone}
             />
           </div>
         ) : (

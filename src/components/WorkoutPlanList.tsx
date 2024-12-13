@@ -8,13 +8,15 @@ interface Props {
   onAdd: () => void;
   onEdit: (plan: WorkoutPlan) => void;
   onDelete: (id: string) => void;
+  resetDone: () => void
 }
 
-export default function WorkoutPlanList({ plans, onSelect, onAdd, onEdit, onDelete }: Props) {
+export default function WorkoutPlanList({ plans, onSelect, onAdd, onEdit, onDelete, resetDone }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-gray-900">Planos de Treino</h3>
+        <div className='flex gap-3'>
         <button
           onClick={onAdd}
           className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
@@ -22,6 +24,11 @@ export default function WorkoutPlanList({ plans, onSelect, onAdd, onEdit, onDele
           <Plus size={20} />
           Novo Plano
         </button>
+        <button
+        onClick={resetDone}
+        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >Resetar</button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -31,6 +38,7 @@ export default function WorkoutPlanList({ plans, onSelect, onAdd, onEdit, onDele
             className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex justify-between items-start mb-2">
+              <input type="checkbox" name="planocheck" checked={plan.done} />
               <h4 className="text-lg font-semibold text-gray-800">{plan.name}</h4>
               <div className="flex gap-2">
                 <button
